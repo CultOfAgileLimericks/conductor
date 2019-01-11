@@ -16,7 +16,7 @@ impl Task {
         }
     }
 
-    pub fn register_input<T: input::Input + 'static>(&mut self, input_to_register: T) {
+    pub fn register_input<T: input::Input + 'static>(&mut self, mut input_to_register: T) {
         input_to_register.add_callback(Box::new(|i: Box<input::Input>| {
             return true;
         }));
