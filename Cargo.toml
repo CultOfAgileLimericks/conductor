@@ -1,7 +1,0 @@
-[package]
-name = "conductor"
-version = "0.1.0"
-authors = ["Mihai Costea <mihai.costea@telenav.com>"]
-edition = "2018"
-
-[dependencies]
