@@ -1,6 +1,6 @@
 package model
 
 type Input interface {
-	SetInputChannel(c chan <-[]byte)
+	SetInputChannel(c chan <-Input)
 	Listen()
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/CultOfAgileLimericks/conductor/internal/pkg/plugin/input"
 	"github.com/CultOfAgileLimericks/conductor/internal/pkg/plugin/output"
 	"github.com/sirupsen/logrus"
+	"net/http"
 	"os"
 )
 
@@ -15,7 +16,10 @@ func main() {
 
 	t := model.NewTask()
 	httpInput := input.NewHTTPInput(":8080")
-	httpOutput := output.NewHTTPOutput()
+
+	r, _ := http.NewRequest("GET", "https://google.com", nil)
+
+	httpOutput := output.NewHTTPOutput(r)
 
 	t.RegisterInput(httpInput)
 	t.RegisterOutput(httpOutput)

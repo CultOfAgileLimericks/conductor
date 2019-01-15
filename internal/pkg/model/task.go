@@ -9,11 +9,11 @@ var logger *logrus.Entry
 type Task struct {
 	Inputs []Input
 	Outputs []Output
-	inputChannel chan []byte
+	inputChannel chan Input
 }
 
 func NewTask() *Task {
-	channel := make(chan []byte)
+	channel := make(chan Input)
 	task := &Task {
 		make([]Input, 0),
 		make([]Output, 0),

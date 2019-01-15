@@ -1,14 +1,14 @@
 package input
 
 import (
+	"github.com/CultOfAgileLimericks/conductor/internal/pkg/model"
 	"log"
 	"net/http"
-	"strings"
 )
 
 type HTTPInput struct {
 	Addr string
-	channel chan <-[]byte
+	channel chan <-model.Input
 }
 
 func NewHTTPInput(addr string) *HTTPInput {
@@ -18,16 +18,13 @@ func NewHTTPInput(addr string) *HTTPInput {
 	}
 }
 
-func (input *HTTPInput) SetInputChannel(c chan <-[]byte) {
+func (input *HTTPInput) SetInputChannel(c chan <-model.Input) {
 	input.channel = c
 }
 
 func (input *HTTPInput) Listen() {
-	msg := make([]byte, 3)
-	_, _ = strings.NewReader("asd").Read(msg)
-	// TODO: Send something useful to this channel
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		input.channel <- msg
+		input.channel <- input
 	})
 	log.Fatal(http.ListenAndServe(input.Addr, nil))
 }
