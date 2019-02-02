@@ -6,7 +6,6 @@ import (
 	"github.com/CultOfAgileLimericks/conductor/internal/pkg/plugin/input"
 	"github.com/CultOfAgileLimericks/conductor/internal/pkg/plugin/output"
 	"github.com/sirupsen/logrus"
-	"net/http"
 	"os"
 )
 
@@ -15,11 +14,23 @@ func main() {
 	logrus.SetLevel(logrus.DebugLevel)
 
 	t := model.NewTask()
-	httpInput := input.NewHTTPInput(":8080")
+	httpInput := input.NewHTTPInput()
+	inputConfig := &input.HTTPInputConfig{
+		Name:"listen on :8080",
+		Addr: ":8080",
 
-	r, _ := http.NewRequest("GET", "https://google.com", nil)
+	}
 
-	httpOutput := output.NewHTTPOutput(r)
+	httpInput.UseConfig(inputConfig)
+
+	httpOutput := output.NewHTTPOutput()
+	outputConfig := &output.HTTPOutputConfig{
+		Name: "GET bing.com",
+		Method: "GET",
+		URL: "https://bing.com",
+		Body: "",
+	}
+	httpOutput.UseConfig(outputConfig)
 
 	t.RegisterInput(httpInput)
 	t.RegisterOutput(httpOutput)

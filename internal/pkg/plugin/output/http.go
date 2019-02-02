@@ -1,24 +1,75 @@
 package output
 
 import (
+	"github.com/CultOfAgileLimericks/conductor/internal/pkg/model"
 	"github.com/sirupsen/logrus"
 	"net/http"
+	"strings"
 )
 
 var logger *logrus.Entry
 
 type HTTPOutput struct {
-	HTTPRequest *http.Request
+	Config model.OutputConfig
 	channel chan <-[]byte
 	httpClient *http.Client
 }
 
-func NewHTTPOutput(r *http.Request) *HTTPOutput {
+type HTTPOutputConfig struct {
+	Name string
+	Method string
+	URL string
+	Body string
+}
+
+func (c *HTTPOutputConfig) OutputType() string {
+	return "http"
+}
+
+func (c *HTTPOutputConfig) OutputName() string {
+	return c.Name
+}
+
+func (c *HTTPOutputConfig) SetOutputName(name string) {
+	c.Name = name
+}
+
+func (c *HTTPOutputConfig) OutputUserConfig() map[string]interface{} {
+	userConfig := make(map[string]interface{})
+
+	userConfig["method"] = c.Method
+	userConfig["url"] = c.URL
+	userConfig["body"] = c.Body
+
+	return userConfig
+}
+
+
+func (c *HTTPOutputConfig) SetOutputUserConfig(config map[string]interface{}) {
+	method, ok := config["method"].(string)
+	if !ok {
+		logger.Fatal("method field not found or incorrect type")
+	}
+	c.Method = method
+
+	url, ok := config["url"].(string)
+	if !ok {
+		logger.Fatal("url field not found or incorrect type")
+	}
+	c.URL = url
+
+	body, ok := config["body"].(string)
+	if !ok {
+		logger.Fatal("body field not found or incorrect type")
+	}
+	c.Body = body
+}
+
+func NewHTTPOutput() *HTTPOutput {
 	o := &HTTPOutput{
-		r,
+		nil,
 		make(chan []byte),
 		&http.Client{},
-
 	}
 
 	logger = logrus.WithField("output", o)
@@ -26,8 +77,19 @@ func NewHTTPOutput(r *http.Request) *HTTPOutput {
 	return o
 }
 
+func (o *HTTPOutput) UseConfig(c model.OutputConfig) {
+	o.Config = c
+}
+
 func (o *HTTPOutput) Execute() bool {
-	res, err := o.httpClient.Do(o.HTTPRequest)
+	httpOutputConfig := o.Config.(*HTTPOutputConfig)
+	request, err := http.NewRequest(httpOutputConfig.Method, httpOutputConfig.URL, strings.NewReader(httpOutputConfig.Body))
+
+	if err != nil {
+		logger.WithField("error", err).Error("Malformed HTTP request")
+	}
+
+	res, err := o.httpClient.Do(request)
 	if err != nil {
 		logger.WithFields(logrus.Fields{"error": err}).Error("Output error")
 	}
