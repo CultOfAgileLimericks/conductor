@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var logger *logrus.Entry
+var httpOutputLogger *logrus.Entry
 
 type HTTPOutput struct {
 	Config model.OutputConfig
@@ -48,19 +48,19 @@ func (c *HTTPOutputConfig) OutputUserConfig() map[string]interface{} {
 func (c *HTTPOutputConfig) SetOutputUserConfig(config map[string]interface{}) {
 	method, ok := config["method"].(string)
 	if !ok {
-		logger.Fatal("method field not found or incorrect type")
+		httpOutputLogger.Fatal("method field not found or incorrect type")
 	}
 	c.Method = method
 
 	url, ok := config["url"].(string)
 	if !ok {
-		logger.Fatal("url field not found or incorrect type")
+		httpOutputLogger.Fatal("url field not found or incorrect type")
 	}
 	c.URL = url
 
 	body, ok := config["body"].(string)
 	if !ok {
-		logger.Fatal("body field not found or incorrect type")
+		httpOutputLogger.Fatal("body field not found or incorrect type")
 	}
 	c.Body = body
 }
@@ -72,7 +72,7 @@ func NewHTTPOutput() *HTTPOutput {
 		&http.Client{},
 	}
 
-	logger = logrus.WithField("output", o)
+	httpOutputLogger = logrus.WithField("output", o)
 
 	return o
 }
@@ -86,15 +86,15 @@ func (o *HTTPOutput) Execute() bool {
 	request, err := http.NewRequest(httpOutputConfig.Method, httpOutputConfig.URL, strings.NewReader(httpOutputConfig.Body))
 
 	if err != nil {
-		logger.WithField("error", err).Error("Malformed HTTP request")
+		httpOutputLogger.WithField("error", err).Error("Malformed HTTP request")
 	}
 
 	res, err := o.httpClient.Do(request)
 	if err != nil {
-		logger.WithFields(logrus.Fields{"error": err}).Error("Output error")
+		httpOutputLogger.WithFields(logrus.Fields{"error": err}).Error("Output error")
 	}
 
-	logger.WithFields(logrus.Fields{"response": res}).Debug("Got HTTP output response")
+	httpOutputLogger.WithFields(logrus.Fields{"response": res}).Debug("Got HTTP output response")
 
 	return err == nil
 }
