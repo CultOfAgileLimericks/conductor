@@ -7,7 +7,7 @@ import (
 )
 
 var httpInputLogger *logrus.Entry
-const HTTP_INPUT_TYPE = "http"
+const HttpInputType = "http"
 
 type HTTPInput struct {
 	Config model.InputConfig
@@ -68,7 +68,7 @@ func NewHTTPInput() *HTTPInput {
 }
 
 func (input *HTTPInput) UseConfig(c model.InputConfig) bool {
-	if c.InputName() == "" || c.InputType() != HTTP_INPUT_TYPE {
+	if c.InputName() == "" || c.InputType() != HttpInputType {
 		return false
 	}
 
