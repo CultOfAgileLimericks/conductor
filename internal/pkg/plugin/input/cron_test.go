@@ -101,6 +101,8 @@ func TestCronInput_Listen_Correct(t *testing.T) {
 	c.SetInputChannel(channel)
 	go c.Listen()
 
+	defer c.Stop()
+
 	select {
 	case i := <- channel:
 		if i != c {
@@ -123,6 +125,8 @@ func TestCronInput_Listen_Incorrect(t *testing.T) {
 
 	c.SetInputChannel(channel)
 	go c.Listen()
+
+	defer c.Stop()
 
 	select {
 	case i := <- channel:
