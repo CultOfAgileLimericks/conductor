@@ -62,6 +62,7 @@ func NewCronInput() *CronInput {
 }
 
 func (input *CronInput) UseConfig(c model.InputConfig) {
+	// TODO: Add checks for config correctness
 	input.Config = c
 }
 
