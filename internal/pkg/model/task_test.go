@@ -21,8 +21,8 @@ type TestInput struct {
 	inputChannel chan <- Input
 }
 
-func (t *TestInput) UseConfig(c InputConfig) {
-
+func (t *TestInput) UseConfig(c InputConfig) bool {
+	return true
 }
 
 func (t *TestInput) SetInputChannel(c chan <-Input) {
