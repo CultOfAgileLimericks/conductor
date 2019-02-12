@@ -14,14 +14,21 @@ func main() {
 	logrus.SetLevel(logrus.DebugLevel)
 
 	t := model.NewTask()
-	httpInput := input.NewHTTPInput()
-	inputConfig := &input.HTTPInputConfig{
-		Name:"listen on :8080",
-		Addr: ":8080",
+	//httpInput := input.NewHTTPInput()
+	//inputConfig := &input.HTTPInputConfig{
+	//	Name:"listen on :8080",
+	//	Addr: ":8080",
+	//
+	//}
+	//
+	//httpInput.UseConfig(inputConfig)
 
+	cronInput := input.NewCronInput()
+	inputConfig := &input.CronInputConfig{
+		Name: "run every minute",
+		Schedule: "0 * * * * *",
 	}
-
-	httpInput.UseConfig(inputConfig)
+	cronInput.UseConfig(inputConfig)
 
 	httpOutput := output.NewHTTPOutput()
 	outputConfig := &output.HTTPOutputConfig{
@@ -32,7 +39,7 @@ func main() {
 	}
 	httpOutput.UseConfig(outputConfig)
 
-	t.RegisterInput(httpInput)
+	t.RegisterInput(cronInput)
 	t.RegisterOutput(httpOutput)
 
 	t.Run()

@@ -6,11 +6,12 @@ import (
 	"net/http"
 )
 
-var logger *logrus.Entry
+var httpInputLogger *logrus.Entry
 
 type HTTPInput struct {
 	Config model.InputConfig
 	channel chan <-model.Input
+	server *http.Server
 }
 
 type HTTPInputConfig struct {
@@ -42,13 +43,13 @@ func (i *HTTPInputConfig) InputUserConfig() map[string]interface{} {
 func (i *HTTPInputConfig) SetInputUserConfig(c map[string]interface{})  {
 	addr, ok := c["addr"].(string)
 	if !ok {
-		logger.Fatal("addr field not found or incorrect type")
+		httpInputLogger.Fatal("addr field not found or incorrect type")
 	}
 	i.Addr = addr
 
 	name, ok := c["name"].(string)
 	if !ok {
-		logger.Fatal("name field not found or incorrect type")
+		httpInputLogger.Fatal("name field not found or incorrect type")
 	}
 	i.Name = name
 }
@@ -57,9 +58,10 @@ func NewHTTPInput() *HTTPInput {
 	httpInput :=  &HTTPInput{
 		nil,
 		nil,
+		nil,
 	}
 
-	logger = logrus.WithField("input", httpInput)
+	httpInputLogger = logrus.WithField("input", httpInput)
 
 	return httpInput
 }
@@ -78,5 +80,18 @@ func (input *HTTPInput) Listen() {
 	})
 
 	httpInputConfig := input.Config.(*HTTPInputConfig)
-	logger.Fatal(http.ListenAndServe(httpInputConfig.Addr, nil))
+	input.server = &http.Server{
+		Addr: httpInputConfig.Addr,
+	}
+
+	if err := input.server.ListenAndServe(); err != http.ErrServerClosed {
+		// TODO: Possible race condition, implement better error handling
+		httpInputLogger.WithField("error", err).Error("Failed to start server")
+	}
+}
+
+func (input *HTTPInput) Stop() {
+	if err := input.server.Shutdown(nil); err != nil {
+		httpInputLogger.WithField("error", err).Error("Cannot shut down server")
+	}
 }
