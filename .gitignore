@@ -16,3 +16,7 @@
 
 # IDEA
 .idea/
+
+# Coverage files
+coverage.txt
+
