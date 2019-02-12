@@ -45,6 +45,10 @@ func TestCronInputConfig_SetInputUserConfig_Incorrect(t *testing.T) {
 	if config.Schedule != "" {
 		t.Fail()
 	}
+
+	if config.InputUserConfig()["schedule"] != nil {
+		t.Fail()
+	}
 }
 
 func TestCronInput_UseConfig_Incorrect(t *testing.T) {

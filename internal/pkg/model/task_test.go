@@ -42,7 +42,7 @@ type TestOutput struct {
 	C chan <- bool
 }
 
-func (*TestOutput) UseConfig(c OutputConfig) {
+func (*TestOutput) UseConfig(c OutputConfig) bool {
 	panic("implement me")
 }
 

@@ -8,6 +8,7 @@ import (
 )
 
 var httpOutputLogger *logrus.Entry
+const HTTPOutputType = "http"
 
 type HTTPOutput struct {
 	Config model.OutputConfig
@@ -23,7 +24,7 @@ type HTTPOutputConfig struct {
 }
 
 func (c *HTTPOutputConfig) OutputType() string {
-	return "http"
+	return HTTPOutputType
 }
 
 func (c *HTTPOutputConfig) OutputName() string {
@@ -35,6 +36,10 @@ func (c *HTTPOutputConfig) SetOutputName(name string) {
 }
 
 func (c *HTTPOutputConfig) OutputUserConfig() map[string]interface{} {
+	if c.URL == "" || c.Method == "" {
+		return nil
+	}
+
 	userConfig := make(map[string]interface{})
 
 	userConfig["method"] = c.Method
@@ -47,20 +52,21 @@ func (c *HTTPOutputConfig) OutputUserConfig() map[string]interface{} {
 
 func (c *HTTPOutputConfig) SetOutputUserConfig(config map[string]interface{}) {
 	method, ok := config["method"].(string)
+	logEntry := logrus.WithField("config", c)
 	if !ok {
-		httpOutputLogger.Fatal("method field not found or incorrect type")
+		logEntry.Error("method field not found or incorrect type")
 	}
 	c.Method = method
 
 	url, ok := config["url"].(string)
 	if !ok {
-		httpOutputLogger.Fatal("url field not found or incorrect type")
+		logEntry.Error("url field not found or incorrect type")
 	}
 	c.URL = url
 
 	body, ok := config["body"].(string)
 	if !ok {
-		httpOutputLogger.Fatal("body field not found or incorrect type")
+		logEntry.Error("body field not found or incorrect type")
 	}
 	c.Body = body
 }
@@ -77,8 +83,17 @@ func NewHTTPOutput() *HTTPOutput {
 	return o
 }
 
-func (o *HTTPOutput) UseConfig(c model.OutputConfig) {
+func (o *HTTPOutput) UseConfig(c model.OutputConfig) bool {
+	if c.OutputType() != HTTPOutputType || c.OutputName() == "" {
+		return false
+	}
+
+	if c := c.OutputUserConfig(); c == nil {
+		return false
+	}
+
 	o.Config = c
+	return true
 }
 
 func (o *HTTPOutput) Execute() bool {
@@ -87,6 +102,7 @@ func (o *HTTPOutput) Execute() bool {
 
 	if err != nil {
 		httpOutputLogger.WithField("error", err).Error("Malformed HTTP request")
+		return false
 	}
 
 	res, err := o.httpClient.Do(request)

@@ -46,9 +46,10 @@ func (i *CronInputConfig) InputUserConfig() map[string]interface{} {
 }
 
 func (i *CronInputConfig) SetInputUserConfig(c map[string]interface{})  {
+	logEntry := logrus.WithField("config", i)
 	schedule, ok := c["schedule"].(string)
 	if !ok {
-		cronInputLogger.Error("schedule field not found or incorrect type")
+		logEntry.Error("schedule field not found or incorrect type")
 	}
 	i.Schedule = schedule
 }
