@@ -7,6 +7,7 @@ import (
 )
 
 var cronInputLogger *logrus.Entry
+const CRON_INPUT_TYPE = "cron"
 
 type CronInput struct {
 	Config model.InputConfig
@@ -21,7 +22,7 @@ type CronInputConfig struct {
 }
 
 func (i *CronInputConfig) InputType() string {
-	return "cron"
+	return CRON_INPUT_TYPE
 }
 
 func (i *CronInputConfig) InputName() string {
@@ -61,8 +62,17 @@ func NewCronInput() *CronInput {
 	return cronInput
 }
 
-func (input *CronInput) UseConfig(c model.InputConfig) {
+func (input *CronInput) UseConfig(c model.InputConfig) bool{
+	if c.InputName() == "" || c.InputType() != CRON_INPUT_TYPE {
+		return false
+	}
+
+	if c := c.InputUserConfig(); c == nil {
+		return false
+	}
+
 	input.Config = c
+	return true
 }
 
 func (input *CronInput) SetInputChannel(c chan <-model.Input) {
