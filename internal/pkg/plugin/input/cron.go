@@ -7,7 +7,7 @@ import (
 )
 
 var cronInputLogger *logrus.Entry
-const CRON_INPUT_TYPE = "cron"
+const CronInputType = "cron"
 
 type CronInput struct {
 	Config model.InputConfig
@@ -22,7 +22,7 @@ type CronInputConfig struct {
 }
 
 func (i *CronInputConfig) InputType() string {
-	return CRON_INPUT_TYPE
+	return CronInputType
 }
 
 func (i *CronInputConfig) InputName() string {
@@ -34,6 +34,10 @@ func (i *CronInputConfig) SetInputName(n string) {
 }
 
 func (i *CronInputConfig) InputUserConfig() map[string]interface{} {
+	if i.Schedule == "" {
+		return nil
+	}
+
 	userConfig := make(map[string]interface{})
 
 	userConfig["schedule"] = i.Schedule
@@ -42,9 +46,10 @@ func (i *CronInputConfig) InputUserConfig() map[string]interface{} {
 }
 
 func (i *CronInputConfig) SetInputUserConfig(c map[string]interface{})  {
+	logEntry := logrus.WithField("config", i)
 	schedule, ok := c["schedule"].(string)
 	if !ok {
-		cronInputLogger.Fatal("schedule field not found or incorrect type")
+		logEntry.Error("schedule field not found or incorrect type")
 	}
 	i.Schedule = schedule
 }
@@ -63,11 +68,11 @@ func NewCronInput() *CronInput {
 }
 
 func (input *CronInput) UseConfig(c model.InputConfig) bool{
-	if c.InputName() == "" || c.InputType() != CRON_INPUT_TYPE {
+	if c.InputName() == "" || c.InputType() != CronInputType {
 		return false
 	}
 
-	if c := c.InputUserConfig(); c == nil {
+	if userConfig := c.InputUserConfig(); userConfig == nil {
 		return false
 	}
 
@@ -87,14 +92,16 @@ func (input *CronInput) Listen() {
 
 	if err != nil {
 		cronInputLogger.WithField("error", err).Error("Failed to add cron schedule")
+		// TODO: Add error handling like sending error messages over channel
 	}
 
 	input.cron.Start()
 	select {
 		case <- input.stop:
 			input.cron.Stop()
-			return
 	}
+
+	close(input.channel)
 }
 
 func (input *CronInput) Stop() {

@@ -1,18 +1,22 @@
 package input
 
 import (
+	"context"
 	"github.com/CultOfAgileLimericks/conductor/internal/pkg/model"
 	"github.com/sirupsen/logrus"
 	"net/http"
+	"sync"
 )
 
 var httpInputLogger *logrus.Entry
-const HTTP_INPUT_TYPE = "http"
+const HTTPInputType = "http"
 
 type HTTPInput struct {
 	Config model.InputConfig
 	channel chan <-model.Input
+	err chan error
 	server *http.Server
+	mutex *sync.Mutex
 }
 
 type HTTPInputConfig struct {
@@ -21,7 +25,7 @@ type HTTPInputConfig struct {
 }
 
 func (i *HTTPInputConfig) InputType() string {
-	return HTTP_INPUT_TYPE
+	return HTTPInputType
 }
 
 func (i *HTTPInputConfig) InputName() string {
@@ -33,33 +37,33 @@ func (i *HTTPInputConfig) SetInputName(n string) {
 }
 
 func (i *HTTPInputConfig) InputUserConfig() map[string]interface{} {
+	if i.Addr == "" {
+		return nil
+	}
+
 	userConfig := make(map[string]interface{})
 
 	userConfig["addr"] = i.Addr
-	userConfig["name"] = i.Name
 
 	return userConfig
 }
 
 func (i *HTTPInputConfig) SetInputUserConfig(c map[string]interface{})  {
+	logEntry := logrus.WithField("config", i)
 	addr, ok := c["addr"].(string)
 	if !ok {
-		httpInputLogger.Fatal("addr field not found or incorrect type")
+		logEntry.Error("addr field not found or incorrect type")
 	}
 	i.Addr = addr
-
-	name, ok := c["name"].(string)
-	if !ok {
-		httpInputLogger.Fatal("name field not found or incorrect type")
-	}
-	i.Name = name
 }
 
 func NewHTTPInput() *HTTPInput {
 	httpInput :=  &HTTPInput{
 		nil,
 		nil,
+		make(chan error),
 		nil,
+		&sync.Mutex{},
 	}
 
 	httpInputLogger = logrus.WithField("input", httpInput)
@@ -68,7 +72,7 @@ func NewHTTPInput() *HTTPInput {
 }
 
 func (input *HTTPInput) UseConfig(c model.InputConfig) bool {
-	if c.InputName() == "" || c.InputType() != HTTP_INPUT_TYPE {
+	if c.InputName() == "" || c.InputType() != HTTPInputType {
 		return false
 	}
 
@@ -85,23 +89,41 @@ func (input *HTTPInput) SetInputChannel(c chan <-model.Input) {
 }
 
 func (input *HTTPInput) Listen() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	handler := http.NewServeMux()
+	handler.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		input.channel <- input
 	})
 
 	httpInputConfig := input.Config.(*HTTPInputConfig)
+
+	input.mutex.Lock()
 	input.server = &http.Server{
 		Addr: httpInputConfig.Addr,
+		Handler: handler,
 	}
+	input.mutex.Unlock()
 
-	if err := input.server.ListenAndServe(); err != http.ErrServerClosed {
-		// TODO: Possible race condition, implement better error handling
-		httpInputLogger.WithField("error", err).Error("Failed to start server")
+	go func() {
+		err := input.server.ListenAndServe()
+		input.err <- err
+
+	}()
+
+	select {
+	case err := <-input.err:
+		if err != http.ErrServerClosed {
+			httpInputLogger.WithField("error", err).Error("Failed to start server")
+		}
+		close(input.err)
+
+		return
 	}
 }
 
 func (input *HTTPInput) Stop() {
-	if err := input.server.Shutdown(nil); err != nil {
+	input.mutex.Lock()
+	if err := input.server.Shutdown(context.Background()); err != nil {
 		httpInputLogger.WithField("error", err).Error("Cannot shut down server")
 	}
+	input.mutex.Unlock()
 }
