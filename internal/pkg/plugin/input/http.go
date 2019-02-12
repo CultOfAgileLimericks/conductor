@@ -5,6 +5,7 @@ import (
 	"github.com/CultOfAgileLimericks/conductor/internal/pkg/model"
 	"github.com/sirupsen/logrus"
 	"net/http"
+	"sync"
 )
 
 var httpInputLogger *logrus.Entry
@@ -15,6 +16,7 @@ type HTTPInput struct {
 	channel chan <-model.Input
 	err chan error
 	server *http.Server
+	mutex *sync.Mutex
 }
 
 type HTTPInputConfig struct {
@@ -61,6 +63,7 @@ func NewHTTPInput() *HTTPInput {
 		nil,
 		make(chan error),
 		nil,
+		&sync.Mutex{},
 	}
 
 	httpInputLogger = logrus.WithField("input", httpInput)
@@ -92,10 +95,13 @@ func (input *HTTPInput) Listen() {
 	})
 
 	httpInputConfig := input.Config.(*HTTPInputConfig)
+
+	input.mutex.Lock()
 	input.server = &http.Server{
 		Addr: httpInputConfig.Addr,
 		Handler: handler,
 	}
+	input.mutex.Unlock()
 
 	go func() {
 		err := input.server.ListenAndServe()
@@ -109,11 +115,15 @@ func (input *HTTPInput) Listen() {
 			httpInputLogger.WithField("error", err).Error("Failed to start server")
 		}
 		close(input.err)
+
+		return
 	}
 }
 
 func (input *HTTPInput) Stop() {
+	input.mutex.Lock()
 	if err := input.server.Shutdown(context.Background()); err != nil {
 		httpInputLogger.WithField("error", err).Error("Cannot shut down server")
 	}
+	input.mutex.Unlock()
 }
