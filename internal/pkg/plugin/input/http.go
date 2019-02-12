@@ -21,7 +21,7 @@ type HTTPInputConfig struct {
 }
 
 func (i *HTTPInputConfig) InputType() string {
-	return "http"
+	return HTTP_INPUT_TYPE
 }
 
 func (i *HTTPInputConfig) InputName() string {
