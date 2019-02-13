@@ -1,6 +1,9 @@
 package model
 
 import (
+	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
 	"testing"
 	"time"
 )
@@ -98,4 +101,20 @@ func TestTask_Run(t *testing.T) {
 	case <- time.After(3 * time.Second):
 		t.Fail()
 	}
+}
+
+func TestTask_Unmarshal(t *testing.T) {
+	data, err := ioutil.ReadFile("internal/pkg/model/test_data/test_task1.yml")
+	if err != nil {
+		t.Fail()
+	}
+
+	task := NewTask()
+
+	yamlError := yaml.Unmarshal(data, task)
+	if yamlError != nil {
+		t.Fail()
+	}
+
+	logrus.Info(task)
 }

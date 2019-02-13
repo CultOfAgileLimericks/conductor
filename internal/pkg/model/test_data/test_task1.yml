@@ -1,0 +1,12 @@
+inputs:
+  - type: cron
+    config:
+      name: "cron input"
+      schedule: "* * * * * *"
+outputs:
+  - type: http
+    config:
+      name: "HTTP GET google.com"
+      method: "GET"
+      url: "https://google.com"
+      body:

@@ -46,3 +46,18 @@ func (t *Task) RegisterInput(input Input) {
 func (t *Task) RegisterOutput(output Output) {
 	t.Outputs = append(t.Outputs, output)
 }
+
+func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	m := make(map[string]interface{})
+
+	if err := unmarshal(m); err != nil {
+		logger.WithField("error", err).Error("Cannot unmarshal Task object")
+		return err
+	}
+
+	logger.Info(m)
+
+	// TODO: Implement YAML logic here
+
+	return nil
+}
