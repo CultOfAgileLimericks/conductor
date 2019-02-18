@@ -1,0 +1,10 @@
+name: "hello world"
+inputs:
+  - "this is an invalid input"
+outputs:
+  - type: http
+    config:
+      name: "HTTP GET google.com"
+      method: "GET"
+      url: "https://google.com"
+      body: ""
