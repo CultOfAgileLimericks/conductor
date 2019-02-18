@@ -1,6 +1,7 @@
 package output
 
 import (
+	"fmt"
 	"github.com/CultOfAgileLimericks/conductor/internal/pkg/model"
 	"github.com/sirupsen/logrus"
 	"net/http"
@@ -8,11 +9,12 @@ import (
 )
 
 var httpOutputLogger *logrus.Entry
+
 const HTTPOutputType = "http"
 
 type HTTPOutput struct {
-	config model.Config
-	channel chan <-[]byte
+	config     model.Config
+	channel    chan<- []byte
 	httpClient *http.Client
 }
 
@@ -42,36 +44,38 @@ func (c *HTTPOutputConfig) GetUserConfig() map[string]interface{} {
 
 	userConfig := make(map[string]interface{})
 
-	userConfig["Method"] = c.Method
-	userConfig["URL"] = c.URL
-	userConfig["Body"] = c.Body
+	userConfig["method"] = c.Method
+	userConfig["url"] = c.URL
+	userConfig["body"] = c.Body
 
 	return userConfig
 }
 
-
 func (c *HTTPOutputConfig) SetUserConfig(config map[string]interface{}) {
-	method, ok := config["Method"].(string)
 	logEntry := logrus.WithField("config", c)
-	if !ok {
-		logEntry.Error("Method field not found or incorrect type")
+	if config["method"] == nil {
+		logEntry.Error("method field not found or incorrect type")
+	} else {
+		method := fmt.Sprintf("%v", config["method"])
+		c.Method = method
 	}
-	c.Method = method
 
-	url, ok := config["URL"].(string)
-	if !ok {
-		logEntry.Error("URL field not found or incorrect type")
+	if config["url"] == nil {
+		logEntry.Error("url field not found or incorrect type")
+	} else {
+		url := fmt.Sprintf("%v", config["url"])
+		c.URL = url
 	}
-	c.URL = url
 
-	body, ok := config["Body"].(string)
-	if !ok {
-		logEntry.Error("Body field not found or incorrect type")
+	if config["body"] == nil {
+		logEntry.Error("body field not found or incorrect type")
+	} else {
+		body := fmt.Sprintf("%v", config["body"])
+		c.Body = body
 	}
-	c.Body = body
 }
 
-func NewHTTPOutput() *HTTPOutput {
+func NewHTTPOutput() interface{} {
 	o := &HTTPOutput{
 		nil,
 		make(chan []byte),

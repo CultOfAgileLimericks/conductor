@@ -1,3 +1,4 @@
+name: "hello world"
 inputs:
   - type: cron
     config:
@@ -9,4 +10,4 @@ outputs:
       name: "HTTP GET google.com"
       method: "GET"
       url: "https://google.com"
-      body:
+      body: ""

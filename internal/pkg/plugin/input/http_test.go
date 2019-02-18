@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewHTTPInput(t *testing.T) {
-	h := NewHTTPInput()
+	h := NewHTTPInput().(*HTTPInput)
 	if h.GetConfig() != nil {
 		t.Fail()
 	}
@@ -27,14 +27,14 @@ func TestHTTPInputConfig_SetInputName(t *testing.T) {
 func TestHTTPInputConfig_SetInputUserConfig_Correct(t *testing.T) {
 	config := &HTTPInputConfig{}
 	userConfig := make(map[string]interface{})
-	userConfig["Addr"] = "localhost:8080"
+	userConfig["addr"] = "localhost:8080"
 	config.SetUserConfig(userConfig)
 
-	if config.GetUserConfig()["Addr"] != userConfig["Addr"] {
+	if config.GetUserConfig()["addr"] != userConfig["addr"] {
 		t.Fail()
 	}
 
-	if config.Addr != userConfig["Addr"] {
+	if config.Addr != userConfig["addr"] {
 		t.Fail()
 	}
 }
@@ -48,13 +48,13 @@ func TestHTTPInputConfig_SetInputUserConfig_Incorrect(t *testing.T) {
 		t.Fail()
 	}
 
-	if config.GetUserConfig()["Addr"] != nil {
+	if config.GetUserConfig()["addr"] != nil {
 		t.Fail()
 	}
 }
 
 func TestHTTPInput_UseConfig_Correct(t *testing.T) {
-	h := NewHTTPInput()
+	h := NewHTTPInput().(*HTTPInput)
 	config := &HTTPInputConfig{
 		Addr: "localhost:8080",
 	}
@@ -68,7 +68,7 @@ func TestHTTPInput_UseConfig_Correct(t *testing.T) {
 }
 
 func TestHTTPInput_UseConfig_Incorrect(t *testing.T) {
-	h := NewHTTPInput()
+	h := NewHTTPInput().(*HTTPInput)
 	config := &HTTPInputConfig{}
 
 	ok := h.SetConfig(config)
@@ -87,7 +87,7 @@ func TestHTTPInput_UseConfig_Incorrect(t *testing.T) {
 }
 
 func TestHTTPInput_SetInputChannel(t *testing.T) {
-	c := NewHTTPInput()
+	c := NewHTTPInput().(*HTTPInput)
 
 	channel := make(chan model.Input)
 	c.SetInputChannel(channel)
@@ -98,7 +98,7 @@ func TestHTTPInput_SetInputChannel(t *testing.T) {
 }
 
 func TestHTTPInput_Listen_Correct(t *testing.T) {
-	h := NewHTTPInput()
+	h := NewHTTPInput().(*HTTPInput)
 	config := &HTTPInputConfig{
 		Addr: "localhost:8080",
 	}
@@ -122,17 +122,17 @@ func TestHTTPInput_Listen_Correct(t *testing.T) {
 	}()
 
 	select {
-	case i := <- channel:
+	case i := <-channel:
 		if i != h {
 			t.Fail()
 		}
-	case <- time.After(2 * time.Second):
+	case <-time.After(2 * time.Second):
 		t.Fail()
 	}
 }
 
 func TestHTTPInput_Listen_Incorrect(t *testing.T) {
-	h := NewHTTPInput()
+	h := NewHTTPInput().(*HTTPInput)
 	config := &HTTPInputConfig{
 		Addr: "localhost:22",
 	}
@@ -145,10 +145,10 @@ func TestHTTPInput_Listen_Incorrect(t *testing.T) {
 	defer h.Stop()
 
 	select {
-	case i := <- channel:
+	case i := <-channel:
 		if i == h {
 			t.Fail()
 		}
-	case <- time.After(2 * time.Second):
+	case <-time.After(2 * time.Second):
 	}
 }

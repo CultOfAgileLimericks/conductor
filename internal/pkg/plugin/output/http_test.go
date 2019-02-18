@@ -3,7 +3,7 @@ package output
 import "testing"
 
 func TestNewHTTPOutput(t *testing.T) {
-	o := NewHTTPOutput()
+	o := NewHTTPOutput().(*HTTPOutput)
 
 	if o.GetConfig() != nil {
 		t.Fail()
@@ -23,15 +23,15 @@ func TestHTTPOutputConfig_SetOutputUserConfig_Correct(t *testing.T) {
 	c := &HTTPOutputConfig{}
 	userConfig := make(map[string]interface{})
 
-	userConfig["Method"] = "GET"
-	userConfig["URL"] = "http://test.com"
-	userConfig["Body"] = "someBODY once told me..."
+	userConfig["method"] = "GET"
+	userConfig["url"] = "http://test.com"
+	userConfig["body"] = "someBODY once told me..."
 
 	c.SetUserConfig(userConfig)
 
-	if c.Method != userConfig["Method"] ||
-		c.URL != userConfig["URL"] ||
-		c.Body != userConfig["Body"] {
+	if c.Method != userConfig["method"] ||
+		c.URL != userConfig["url"] ||
+		c.Body != userConfig["body"] {
 
 		t.Fail()
 	}
@@ -50,7 +50,7 @@ func TestHTTPOutputConfig_SetOutputUserConfig_Incorrect(t *testing.T) {
 
 func TestHTTPOutput_UseConfig_Incorrect(t *testing.T) {
 	c := &HTTPOutputConfig{}
-	h := NewHTTPOutput()
+	h := NewHTTPOutput().(*HTTPOutput)
 
 	ok := h.SetConfig(c)
 
@@ -74,7 +74,7 @@ func TestHTTPOutput_UseConfig_Correct(t *testing.T) {
 	}
 	c.SetName("test config")
 
-	h := NewHTTPOutput()
+	h := NewHTTPOutput().(*HTTPOutput)
 
 	ok := h.SetConfig(c)
 
@@ -91,7 +91,7 @@ func TestHTTPOutput_Execute_Correct(t *testing.T) {
 	}
 	c.SetName("test config")
 
-	h := NewHTTPOutput()
+	h := NewHTTPOutput().(*HTTPOutput)
 	h.SetConfig(c)
 
 	ok := h.Execute()
@@ -109,7 +109,7 @@ func TestHTTPOutput_Execute_Incorrect(t *testing.T) {
 	}
 	c.SetName("test config")
 
-	h := NewHTTPOutput()
+	h := NewHTTPOutput().(*HTTPOutput)
 	h.SetConfig(c)
 
 	ok := h.Execute()
@@ -119,7 +119,7 @@ func TestHTTPOutput_Execute_Incorrect(t *testing.T) {
 	}
 
 	c.Method = "THIS IS AN UNKNOWN METHOD"
-	h = NewHTTPOutput()
+	h = NewHTTPOutput().(*HTTPOutput)
 	h.SetConfig(c)
 
 	ok = h.Execute()

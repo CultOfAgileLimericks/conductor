@@ -2,22 +2,24 @@ package model
 
 import (
 	"errors"
+	"fmt"
 	"github.com/CultOfAgileLimericks/conductor/internal/pkg/plugin"
 	"github.com/sirupsen/logrus"
 	"reflect"
 )
+
 var logger *logrus.Entry
 
-
 type Task struct {
-	Inputs []Input
-	Outputs []Output
+	// TODO: Add Name field
+	Inputs       []Input
+	Outputs      []Output
 	inputChannel chan Input
 }
 
 func NewTask() *Task {
 	channel := make(chan Input)
-	task := &Task {
+	task := &Task{
 		make([]Input, 0),
 		make([]Output, 0),
 		channel,
@@ -83,12 +85,18 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			return errors.New(msg)
 		}
 		_type := mapInput["type"].(string)
-		i := plugin.Manager.Inputs[_type]
-		input := reflect.New(i.Type).Elem().Interface().(Input)
-		config := reflect.New(plugin.Manager.Inputs[_type].Config).Elem().Interface().(Config)
+		input := plugin.Manager.Inputs[_type].Type().(Input)
+		config := reflect.New(plugin.Manager.Inputs[_type].Config).Interface().(Config)
 
-		c := mapInput["config"].(map[string]interface{})
+		c := make(map[string]interface{})
+
+		for key, value := range mapInput["config"].(map[interface{}]interface{}) {
+			strKey := fmt.Sprintf("%v", key)
+			c[strKey] = value
+		}
+
 		config.SetUserConfig(c)
+		config.SetName(fmt.Sprintf("%v", c["name"]))
 		input.SetConfig(config)
 
 		t.RegisterInput(input)
@@ -103,16 +111,22 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			return errors.New(msg)
 		}
 		_type := mapOutput["type"].(string)
-		output := reflect.New(plugin.Manager.Outputs[_type].Type).Elem().Interface().(Output)
-		config := reflect.New(plugin.Manager.Outputs[_type].Config).Elem().Interface().(Config)
+		output := plugin.Manager.Outputs[_type].Type().(Output)
+		config := reflect.New(plugin.Manager.Outputs[_type].Config).Interface().(Config)
 
-		c := mapOutput["config"].(map[string]interface{})
+		c := make(map[string]interface{})
+
+		for key, value := range mapOutput["config"].(map[interface{}]interface{}) {
+			strKey := fmt.Sprintf("%v", key)
+			c[strKey] = value
+		}
+
 		config.SetUserConfig(c)
+		config.SetName(fmt.Sprintf("%v", c["name"]))
 		output.SetConfig(config)
 
 		t.RegisterOutput(output)
 	}
-
 
 	return nil
 }

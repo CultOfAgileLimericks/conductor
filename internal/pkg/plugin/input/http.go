@@ -2,6 +2,7 @@ package input
 
 import (
 	"context"
+	"fmt"
 	"github.com/CultOfAgileLimericks/conductor/internal/pkg/model"
 	"github.com/sirupsen/logrus"
 	"net/http"
@@ -9,14 +10,15 @@ import (
 )
 
 var httpInputLogger *logrus.Entry
+
 const HTTPInputType = "http"
 
 type HTTPInput struct {
-	config model.Config
-	channel chan <-model.Input
-	err chan error
-	server *http.Server
-	mutex *sync.Mutex
+	config  model.Config
+	channel chan<- model.Input
+	err     chan error
+	server  *http.Server
+	mutex   *sync.Mutex
 }
 
 type HTTPInputConfig struct {
@@ -43,22 +45,23 @@ func (i *HTTPInputConfig) GetUserConfig() map[string]interface{} {
 
 	userConfig := make(map[string]interface{})
 
-	userConfig["Addr"] = i.Addr
+	userConfig["addr"] = i.Addr
 
 	return userConfig
 }
 
-func (i *HTTPInputConfig) SetUserConfig(c map[string]interface{})  {
+func (i *HTTPInputConfig) SetUserConfig(c map[string]interface{}) {
 	logEntry := logrus.WithField("config", i)
-	addr, ok := c["Addr"].(string)
-	if !ok {
-		logEntry.Error("Addr field not found or incorrect type")
+	if c["addr"] == nil {
+		logEntry.Error("addr field not found or incorrect type")
+	} else {
+		addr := fmt.Sprintf("%v", c["addr"])
+		i.Addr = addr
 	}
-	i.Addr = addr
 }
 
-func NewHTTPInput() *HTTPInput {
-	httpInput :=  &HTTPInput{
+func NewHTTPInput() interface{} {
+	httpInput := &HTTPInput{
 		nil,
 		nil,
 		make(chan error),
@@ -88,7 +91,7 @@ func (input *HTTPInput) GetConfig() model.Config {
 	return input.config
 }
 
-func (input *HTTPInput) SetInputChannel(c chan <-model.Input) {
+func (input *HTTPInput) SetInputChannel(c chan<- model.Input) {
 	input.channel = c
 }
 
@@ -102,7 +105,7 @@ func (input *HTTPInput) Listen() {
 
 	input.mutex.Lock()
 	input.server = &http.Server{
-		Addr: httpInputConfig.Addr,
+		Addr:    httpInputConfig.Addr,
 		Handler: handler,
 	}
 	input.mutex.Unlock()

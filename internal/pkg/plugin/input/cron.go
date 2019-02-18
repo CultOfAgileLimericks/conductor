@@ -1,19 +1,21 @@
 package input
 
 import (
+	"fmt"
 	"github.com/CultOfAgileLimericks/conductor/internal/pkg/model"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
 )
 
 var cronInputLogger *logrus.Entry
+
 const CronInputType = "cron"
 
 type CronInput struct {
-	config model.Config
-	channel chan <-model.Input
-	cron *cron.Cron
-	stop chan bool
+	config  model.Config
+	channel chan<- model.Input
+	cron    *cron.Cron
+	stop    chan bool
 }
 
 type CronInputConfig struct {
@@ -40,22 +42,23 @@ func (i *CronInputConfig) GetUserConfig() map[string]interface{} {
 
 	userConfig := make(map[string]interface{})
 
-	userConfig["Schedule"] = i.Schedule
+	userConfig["schedule"] = i.Schedule
 
 	return userConfig
 }
 
-func (i *CronInputConfig) SetUserConfig(c map[string]interface{})  {
+func (i *CronInputConfig) SetUserConfig(c map[string]interface{}) {
 	logEntry := logrus.WithField("config", i)
-	schedule, ok := c["Schedule"].(string)
-	if !ok {
-		logEntry.Error("Schedule field not found or incorrect type")
+	if c["schedule"] == nil {
+		logEntry.Error("schedule field not found or incorrect type")
+	} else {
+		schedule := fmt.Sprintf("%v", c["schedule"])
+		i.Schedule = schedule
 	}
-	i.Schedule = schedule
 }
 
-func NewCronInput() *CronInput {
-	cronInput :=  &CronInput{
+func NewCronInput() interface{} {
+	cronInput := &CronInput{
 		nil,
 		nil,
 		nil,
@@ -67,7 +70,7 @@ func NewCronInput() *CronInput {
 	return cronInput
 }
 
-func (input *CronInput) SetConfig(c model.Config) bool{
+func (input *CronInput) SetConfig(c model.Config) bool {
 	if c.GetName() == "" || c.GetType() != CronInputType {
 		return false
 	}
@@ -84,7 +87,7 @@ func (input *CronInput) GetConfig() model.Config {
 	return input.config
 }
 
-func (input *CronInput) SetInputChannel(c chan <-model.Input) {
+func (input *CronInput) SetInputChannel(c chan<- model.Input) {
 	input.channel = c
 }
 
@@ -101,8 +104,8 @@ func (input *CronInput) Listen() {
 
 	input.cron.Start()
 	select {
-		case <- input.stop:
-			input.cron.Stop()
+	case <-input.stop:
+		input.cron.Stop()
 	}
 
 	close(input.channel)
