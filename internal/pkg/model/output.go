@@ -1,7 +1,8 @@
 package model
 
 type Output interface {
-	UseConfig(c OutputConfig) bool
+	SetConfig(c Config) bool
+	GetConfig() Config
 
 
 	Execute() bool

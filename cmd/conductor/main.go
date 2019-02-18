@@ -16,28 +16,28 @@ func main() {
 	t := model.NewTask()
 	//httpInput := input.NewHTTPInput()
 	//inputConfig := &input.HTTPInputConfig{
-	//	Name:"listen on :8080",
+	//	GetName:"listen on :8080",
 	//	Addr: ":8080",
 	//
 	//}
 	//
-	//httpInput.UseConfig(inputConfig)
+	//httpInput.SetConfig(inputConfig)
 
 	cronInput := input.NewCronInput()
 	inputConfig := &input.CronInputConfig{
-		Name: "run every minute",
 		Schedule: "0 * * * * *",
 	}
-	cronInput.UseConfig(inputConfig)
+	inputConfig.SetName("run every minute")
+	cronInput.SetConfig(inputConfig)
 
 	httpOutput := output.NewHTTPOutput()
 	outputConfig := &output.HTTPOutputConfig{
-		Name: "GET bing.com",
 		Method: "GET",
 		URL: "https://bing.com",
 		Body: "",
 	}
-	httpOutput.UseConfig(outputConfig)
+	outputConfig.SetName("GET bing.com")
+	httpOutput.SetConfig(outputConfig)
 
 	t.RegisterInput(cronInput)
 	t.RegisterOutput(httpOutput)

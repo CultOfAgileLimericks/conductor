@@ -12,7 +12,7 @@ var httpInputLogger *logrus.Entry
 const HTTPInputType = "http"
 
 type HTTPInput struct {
-	Config model.InputConfig
+	config model.Config
 	channel chan <-model.Input
 	err chan error
 	server *http.Server
@@ -20,39 +20,39 @@ type HTTPInput struct {
 }
 
 type HTTPInputConfig struct {
-	Name string
+	name string
 	Addr string
 }
 
-func (i *HTTPInputConfig) InputType() string {
+func (i *HTTPInputConfig) GetType() string {
 	return HTTPInputType
 }
 
-func (i *HTTPInputConfig) InputName() string {
-	return i.Name
+func (i *HTTPInputConfig) GetName() string {
+	return i.name
 }
 
-func (i *HTTPInputConfig) SetInputName(n string) {
-	i.Name = n
+func (i *HTTPInputConfig) SetName(n string) {
+	i.name = n
 }
 
-func (i *HTTPInputConfig) InputUserConfig() map[string]interface{} {
+func (i *HTTPInputConfig) GetUserConfig() map[string]interface{} {
 	if i.Addr == "" {
 		return nil
 	}
 
 	userConfig := make(map[string]interface{})
 
-	userConfig["addr"] = i.Addr
+	userConfig["Addr"] = i.Addr
 
 	return userConfig
 }
 
-func (i *HTTPInputConfig) SetInputUserConfig(c map[string]interface{})  {
+func (i *HTTPInputConfig) SetUserConfig(c map[string]interface{})  {
 	logEntry := logrus.WithField("config", i)
-	addr, ok := c["addr"].(string)
+	addr, ok := c["Addr"].(string)
 	if !ok {
-		logEntry.Error("addr field not found or incorrect type")
+		logEntry.Error("Addr field not found or incorrect type")
 	}
 	i.Addr = addr
 }
@@ -71,17 +71,21 @@ func NewHTTPInput() *HTTPInput {
 	return httpInput
 }
 
-func (input *HTTPInput) UseConfig(c model.InputConfig) bool {
-	if c.InputName() == "" || c.InputType() != HTTPInputType {
+func (input *HTTPInput) SetConfig(c model.Config) bool {
+	if c.GetName() == "" || c.GetType() != HTTPInputType {
 		return false
 	}
 
-	if c := c.InputUserConfig(); c == nil {
+	if c := c.GetUserConfig(); c == nil {
 		return false
 	}
 
-	input.Config = c
+	input.config = c
 	return true
+}
+
+func (input *HTTPInput) GetConfig() model.Config {
+	return input.config
 }
 
 func (input *HTTPInput) SetInputChannel(c chan <-model.Input) {
@@ -94,7 +98,7 @@ func (input *HTTPInput) Listen() {
 		input.channel <- input
 	})
 
-	httpInputConfig := input.Config.(*HTTPInputConfig)
+	httpInputConfig := input.config.(*HTTPInputConfig)
 
 	input.mutex.Lock()
 	input.server = &http.Server{

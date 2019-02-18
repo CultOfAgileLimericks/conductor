@@ -10,7 +10,7 @@ import (
 
 func TestNewHTTPInput(t *testing.T) {
 	h := NewHTTPInput()
-	if h.Config != nil {
+	if h.GetConfig() != nil {
 		t.Fail()
 	}
 }
@@ -18,8 +18,8 @@ func TestNewHTTPInput(t *testing.T) {
 func TestHTTPInputConfig_SetInputName(t *testing.T) {
 	c := &HTTPInputConfig{}
 
-	c.SetInputName("test")
-	if c.Name != "test" {
+	c.SetName("test")
+	if c.GetName() != "test" {
 		t.Fail()
 	}
 }
@@ -27,14 +27,14 @@ func TestHTTPInputConfig_SetInputName(t *testing.T) {
 func TestHTTPInputConfig_SetInputUserConfig_Correct(t *testing.T) {
 	config := &HTTPInputConfig{}
 	userConfig := make(map[string]interface{})
-	userConfig["addr"] = "localhost:8080"
-	config.SetInputUserConfig(userConfig)
+	userConfig["Addr"] = "localhost:8080"
+	config.SetUserConfig(userConfig)
 
-	if config.InputUserConfig()["addr"] != userConfig["addr"] {
+	if config.GetUserConfig()["Addr"] != userConfig["Addr"] {
 		t.Fail()
 	}
 
-	if config.Addr != userConfig["addr"] {
+	if config.Addr != userConfig["Addr"] {
 		t.Fail()
 	}
 }
@@ -42,13 +42,13 @@ func TestHTTPInputConfig_SetInputUserConfig_Correct(t *testing.T) {
 func TestHTTPInputConfig_SetInputUserConfig_Incorrect(t *testing.T) {
 	config := &HTTPInputConfig{}
 	userConfig := make(map[string]interface{})
-	config.SetInputUserConfig(userConfig)
+	config.SetUserConfig(userConfig)
 
 	if config.Addr != "" {
 		t.Fail()
 	}
 
-	if config.InputUserConfig()["addr"] != nil {
+	if config.GetUserConfig()["Addr"] != nil {
 		t.Fail()
 	}
 }
@@ -56,13 +56,13 @@ func TestHTTPInputConfig_SetInputUserConfig_Incorrect(t *testing.T) {
 func TestHTTPInput_UseConfig_Correct(t *testing.T) {
 	h := NewHTTPInput()
 	config := &HTTPInputConfig{
-		Name: "test",
 		Addr: "localhost:8080",
 	}
+	config.SetName("test")
 
-	ok := h.UseConfig(config)
+	ok := h.SetConfig(config)
 
-	if !ok || h.Config != config {
+	if !ok || h.GetConfig() != config {
 		t.Fail()
 	}
 }
@@ -71,17 +71,17 @@ func TestHTTPInput_UseConfig_Incorrect(t *testing.T) {
 	h := NewHTTPInput()
 	config := &HTTPInputConfig{}
 
-	ok := h.UseConfig(config)
+	ok := h.SetConfig(config)
 
-	if ok || h.Config != nil {
+	if ok || h.GetConfig() != nil {
 		t.Fail()
 	}
 
-	config.Name = "test name"
+	config.SetName("test name")
 
-	ok = h.UseConfig(config)
+	ok = h.SetConfig(config)
 
-	if ok || h.Config != nil {
+	if ok || h.GetConfig() != nil {
 		t.Fail()
 	}
 }
@@ -100,11 +100,11 @@ func TestHTTPInput_SetInputChannel(t *testing.T) {
 func TestHTTPInput_Listen_Correct(t *testing.T) {
 	h := NewHTTPInput()
 	config := &HTTPInputConfig{
-		Name: "test http input",
 		Addr: "localhost:8080",
 	}
+	config.SetName("test http input")
 
-	h.UseConfig(config)
+	h.SetConfig(config)
 	channel := make(chan model.Input)
 
 	h.SetInputChannel(channel)
@@ -134,11 +134,11 @@ func TestHTTPInput_Listen_Correct(t *testing.T) {
 func TestHTTPInput_Listen_Incorrect(t *testing.T) {
 	h := NewHTTPInput()
 	config := &HTTPInputConfig{
-		Name: "test http input",
 		Addr: "localhost:22",
 	}
+	config.SetName("test http input")
 
-	h.UseConfig(config)
+	h.SetConfig(config)
 	channel := make(chan model.Input)
 
 	go h.Listen()

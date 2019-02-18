@@ -8,16 +8,16 @@ import (
 
 func TestNewCronInput(t *testing.T) {
 	c := NewCronInput()
-	if c.Config != nil {
+	if c.GetConfig() != nil {
 		t.Fail()
 	}
 }
 
 func TestCronInputConfig_SetInputName(t *testing.T) {
 	config := &CronInputConfig{}
-	config.SetInputName("test name")
+	config.SetName("test name")
 
-	if config.Name != "test name" {
+	if config.GetName() != "test name" {
 		t.Fail()
 	}
 }
@@ -25,14 +25,14 @@ func TestCronInputConfig_SetInputName(t *testing.T) {
 func TestCronInputConfig_SetInputUserConfig_Correct(t *testing.T) {
 	config := &CronInputConfig{}
 	userConfig := make(map[string]interface{})
-	userConfig["schedule"] = "* * * * * *"
-	config.SetInputUserConfig(userConfig)
+	userConfig["Schedule"] = "* * * * * *"
+	config.SetUserConfig(userConfig)
 
-	if config.InputUserConfig()["schedule"] != userConfig["schedule"] {
+	if config.GetUserConfig()["Schedule"] != userConfig["Schedule"] {
 		t.Fail()
 	}
 
-	if config.Schedule != userConfig["schedule"] {
+	if config.Schedule != userConfig["Schedule"] {
 		t.Fail()
 	}
 }
@@ -40,13 +40,13 @@ func TestCronInputConfig_SetInputUserConfig_Correct(t *testing.T) {
 func TestCronInputConfig_SetInputUserConfig_Incorrect(t *testing.T) {
 	config := &CronInputConfig{}
 	userConfig := make(map[string]interface{})
-	config.SetInputUserConfig(userConfig)
+	config.SetUserConfig(userConfig)
 
 	if config.Schedule != "" {
 		t.Fail()
 	}
 
-	if config.InputUserConfig()["schedule"] != nil {
+	if config.GetUserConfig()["Schedule"] != nil {
 		t.Fail()
 	}
 }
@@ -55,15 +55,15 @@ func TestCronInput_UseConfig_Incorrect(t *testing.T) {
 	c := NewCronInput()
 	config := &CronInputConfig{}
 
-	ok := c.UseConfig(config)
-	if ok || c.Config == config {
+	ok := c.SetConfig(config)
+	if ok || c.config == config {
 		t.Fail()
 	}
 
-	config.Name = "TestCronInput"
+	config.SetName("TestCronInput")
 
-	ok = c.UseConfig(config)
-	if ok || c.Config == config {
+	ok = c.SetConfig(config)
+	if ok || c.GetConfig() == config {
 		t.Fail()
 	}
 }
@@ -72,11 +72,11 @@ func TestCronInput_UseConfig_Correct(t *testing.T) {
 	c := NewCronInput()
 	config := &CronInputConfig{
 		Schedule: "* * * * * *",
-		Name: "TestCronInput",
 	}
+	config.SetName("TestCronInput")
 
-	ok := c.UseConfig(config)
-	if !ok || c.Config != config {
+	ok := c.SetConfig(config)
+	if !ok || c.GetConfig() != config {
 		t.Fail()
 	}
 }
@@ -96,10 +96,10 @@ func TestCronInput_Listen_Correct(t *testing.T) {
 	c := NewCronInput()
 	config := &CronInputConfig{
 		Schedule: "* * * * * *",
-		Name: "TestCronInput",
+		name:     "TestCronInput",
 	}
 
-	c.UseConfig(config)
+	c.SetConfig(config)
 	channel := make(chan model.Input)
 
 	c.SetInputChannel(channel)
@@ -121,10 +121,10 @@ func TestCronInput_Listen_Incorrect(t *testing.T) {
 	c := NewCronInput()
 	config := &CronInputConfig{
 		Schedule: "asdfgh",
-		Name: "TestCronInput",
 	}
+	config.SetName("TestCronInput")
 
-	c.UseConfig(config)
+	c.SetConfig(config)
 	channel := make(chan model.Input)
 
 	c.SetInputChannel(channel)
@@ -146,10 +146,10 @@ func TestCronInput_Listen_Stopped(t *testing.T) {
 	c := NewCronInput()
 	config := &CronInputConfig{
 		Schedule: "* * * * * *",
-		Name: "TestCronInput",
 	}
+	config.SetName("TestCronInput")
 
-	c.UseConfig(config)
+	c.SetConfig(config)
 	channel := make(chan model.Input)
 
 	c.SetInputChannel(channel)
@@ -183,8 +183,8 @@ func TestCronInput_UseConfig(t *testing.T) {
 	c := NewCronInput()
 	config := &CronInputConfig{}
 
-	c.UseConfig(config)
-	if c.Config == config {
+	c.SetConfig(config)
+	if c.GetConfig() == config {
 		t.Fail()
 	}
 }
