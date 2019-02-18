@@ -107,19 +107,3 @@ func TestTask_Run(t *testing.T) {
 		t.Fail()
 	}
 }
-
-//func TestTask_Unmarshal(t *testing.T) {
-//	data, err := ioutil.ReadFile("internal/pkg/model/test_data/test_task1.yml")
-//	if err != nil {
-//		t.Fail()
-//	}
-//
-//	task := NewTask()
-//
-//	yamlError := yaml.Unmarshal(data, task)
-//	if yamlError != nil {
-//		t.Fail()
-//	}
-//
-//	logrus.Info(task)
-//}

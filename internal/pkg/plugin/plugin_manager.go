@@ -1,26 +1,39 @@
 package plugin
 
 import (
-	"github.com/CultOfAgileLimericks/conductor/internal/pkg/model"
+	"reflect"
 )
 
-type Manager struct {
-	Inputs map[string]model.Input
-	Outputs map[string]model.Output
+var Manager = newManager()
+
+type Mapping struct {
+	Type reflect.Type
+	Config reflect.Type
 }
 
-func NewManager() *Manager {
-	m := &Manager{}
-	m.Inputs = make(map[string]model.Input)
-	m.Outputs = make(map[string]model.Output)
+type M struct {
+	Inputs map[string]Mapping
+	Outputs map[string]Mapping
+}
+
+func newManager() *M {
+	m := &M{}
+	m.Inputs = make(map[string]Mapping)
+	m.Outputs = make(map[string]Mapping)
 
 	return m
 }
 
-func (m *Manager) RegisterInput(i model.Input) {
-	m.Inputs[i.GetConfig().GetName()] = i
+func (m *M) RegisterInput(name string, input reflect.Type, config reflect.Type) {
+	m.Inputs[name] = Mapping{
+		input,
+		config,
+	}
 }
 
-func (m *Manager) RegisterOutput(o model.Output) {
-	m.Outputs[o.GetConfig().GetName()] = o
+func (m *M) RegisterOutput(name string, output reflect.Type, config reflect.Type) {
+	m.Outputs[name] = Mapping{
+		output,
+		config,
+	}
 }
