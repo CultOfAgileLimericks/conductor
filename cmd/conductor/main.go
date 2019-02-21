@@ -1,48 +1,23 @@
 package main
 
 import (
-	"fmt"
-	"github.com/CultOfAgileLimericks/conductor/internal/pkg/model"
+	"github.com/CultOfAgileLimericks/conductor/internal/pkg/plugin"
 	"github.com/CultOfAgileLimericks/conductor/internal/pkg/plugin/input"
 	"github.com/CultOfAgileLimericks/conductor/internal/pkg/plugin/output"
 	"github.com/sirupsen/logrus"
 	"os"
+	"reflect"
 )
 
+func InitPluginManager() {
+	plugin.Manager.RegisterInput("cron", input.NewCronInput, reflect.TypeOf(input.CronInputConfig{}))
+	plugin.Manager.RegisterInput("http", input.NewHTTPInput, reflect.TypeOf(input.HTTPInputConfig{}))
+	plugin.Manager.RegisterOutput("http", output.NewHTTPOutput, reflect.TypeOf(output.HTTPOutputConfig{}))
+}
+
 func main() {
+	InitPluginManager()
+
 	logrus.SetOutput(os.Stdout)
 	logrus.SetLevel(logrus.DebugLevel)
-
-	t := model.NewTask()
-	//httpInput := input.NewHTTPInput()
-	//inputConfig := &input.HTTPInputConfig{
-	//	Name:"listen on :8080",
-	//	Addr: ":8080",
-	//
-	//}
-	//
-	//httpInput.UseConfig(inputConfig)
-
-	cronInput := input.NewCronInput()
-	inputConfig := &input.CronInputConfig{
-		Name: "run every minute",
-		Schedule: "0 * * * * *",
-	}
-	cronInput.UseConfig(inputConfig)
-
-	httpOutput := output.NewHTTPOutput()
-	outputConfig := &output.HTTPOutputConfig{
-		Name: "GET bing.com",
-		Method: "GET",
-		URL: "https://bing.com",
-		Body: "",
-	}
-	httpOutput.UseConfig(outputConfig)
-
-	t.RegisterInput(cronInput)
-	t.RegisterOutput(httpOutput)
-
-	t.Run()
-
-	fmt.Printf("%+v", t)
 }

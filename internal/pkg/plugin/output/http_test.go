@@ -3,18 +3,18 @@ package output
 import "testing"
 
 func TestNewHTTPOutput(t *testing.T) {
-	o := NewHTTPOutput()
+	o := NewHTTPOutput().(*HTTPOutput)
 
-	if o.Config != nil {
+	if o.GetConfig() != nil {
 		t.Fail()
 	}
 }
 
 func TestHTTPOutputConfig_SetOutputName(t *testing.T) {
 	c := &HTTPOutputConfig{}
-	c.SetOutputName("test output")
+	c.SetName("test output")
 
-	if c.Name != "test output" {
+	if c.GetName() != "test output" {
 		t.Fail()
 	}
 }
@@ -27,7 +27,7 @@ func TestHTTPOutputConfig_SetOutputUserConfig_Correct(t *testing.T) {
 	userConfig["url"] = "http://test.com"
 	userConfig["body"] = "someBODY once told me..."
 
-	c.SetOutputUserConfig(userConfig)
+	c.SetUserConfig(userConfig)
 
 	if c.Method != userConfig["method"] ||
 		c.URL != userConfig["url"] ||
@@ -41,58 +41,58 @@ func TestHTTPOutputConfig_SetOutputUserConfig_Incorrect(t *testing.T) {
 	c := &HTTPOutputConfig{}
 	userConfig := make(map[string]interface{})
 
-	c.SetOutputUserConfig(userConfig)
+	c.SetUserConfig(userConfig)
 
-	if c.Method != "" || c.Name != "" || c.Body != "" {
+	if c.Method != "" || c.GetName() != "" || c.Body != "" {
 		t.Fail()
 	}
 }
 
 func TestHTTPOutput_UseConfig_Incorrect(t *testing.T) {
 	c := &HTTPOutputConfig{}
-	h := NewHTTPOutput()
+	h := NewHTTPOutput().(*HTTPOutput)
 
-	ok := h.UseConfig(c)
+	ok := h.SetConfig(c)
 
-	if ok || h.Config != nil {
+	if ok || h.GetConfig() != nil {
 		t.Fail()
 	}
 
-	c.SetOutputName("test output")
-	ok = h.UseConfig(c)
+	c.SetName("test output")
+	ok = h.SetConfig(c)
 
-	if ok || h.Config != nil {
+	if ok || h.GetConfig() != nil {
 		t.Fail()
 	}
 }
 
 func TestHTTPOutput_UseConfig_Correct(t *testing.T) {
 	c := &HTTPOutputConfig{
-		Name: "test config",
 		Method: "GET",
-		URL: "https://google.com",
-		Body: "someBODY once told me...",
+		URL:    "https://google.com",
+		Body:   "someBODY once told me...",
 	}
+	c.SetName("test config")
 
-	h := NewHTTPOutput()
+	h := NewHTTPOutput().(*HTTPOutput)
 
-	ok := h.UseConfig(c)
+	ok := h.SetConfig(c)
 
-	if !ok || h.Config != c {
+	if !ok || h.GetConfig() != c {
 		t.Fail()
 	}
 }
 
 func TestHTTPOutput_Execute_Correct(t *testing.T) {
 	c := &HTTPOutputConfig{
-		Name: "test config",
 		Method: "GET",
-		URL: "https://google.com",
-		Body: "",
+		URL:    "https://google.com",
+		Body:   "",
 	}
+	c.SetName("test config")
 
-	h := NewHTTPOutput()
-	h.UseConfig(c)
+	h := NewHTTPOutput().(*HTTPOutput)
+	h.SetConfig(c)
 
 	ok := h.Execute()
 
@@ -103,14 +103,14 @@ func TestHTTPOutput_Execute_Correct(t *testing.T) {
 
 func TestHTTPOutput_Execute_Incorrect(t *testing.T) {
 	c := &HTTPOutputConfig{
-		Name: "test config",
 		Method: "GET",
-		URL: "lolololololololololololololol",
-		Body: "",
+		URL:    "lolololololololololololololol",
+		Body:   "",
 	}
+	c.SetName("test config")
 
-	h := NewHTTPOutput()
-	h.UseConfig(c)
+	h := NewHTTPOutput().(*HTTPOutput)
+	h.SetConfig(c)
 
 	ok := h.Execute()
 
@@ -119,8 +119,8 @@ func TestHTTPOutput_Execute_Incorrect(t *testing.T) {
 	}
 
 	c.Method = "THIS IS AN UNKNOWN METHOD"
-	h = NewHTTPOutput()
-	h.UseConfig(c)
+	h = NewHTTPOutput().(*HTTPOutput)
+	h.SetConfig(c)
 
 	ok = h.Execute()
 

@@ -1,39 +1,41 @@
 package input
 
 import (
+	"fmt"
 	"github.com/CultOfAgileLimericks/conductor/internal/pkg/model"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
 )
 
 var cronInputLogger *logrus.Entry
+
 const CronInputType = "cron"
 
 type CronInput struct {
-	Config model.InputConfig
-	channel chan <-model.Input
-	cron *cron.Cron
-	stop chan bool
+	config  model.Config
+	channel chan<- model.Input
+	cron    *cron.Cron
+	stop    chan bool
 }
 
 type CronInputConfig struct {
-	Name string
+	name     string
 	Schedule string
 }
 
-func (i *CronInputConfig) InputType() string {
+func (i *CronInputConfig) GetType() string {
 	return CronInputType
 }
 
-func (i *CronInputConfig) InputName() string {
-	return i.Name
+func (i *CronInputConfig) GetName() string {
+	return i.name
 }
 
-func (i *CronInputConfig) SetInputName(n string) {
-	i.Name = n
+func (i *CronInputConfig) SetName(n string) {
+	i.name = n
 }
 
-func (i *CronInputConfig) InputUserConfig() map[string]interface{} {
+func (i *CronInputConfig) GetUserConfig() map[string]interface{} {
 	if i.Schedule == "" {
 		return nil
 	}
@@ -45,17 +47,18 @@ func (i *CronInputConfig) InputUserConfig() map[string]interface{} {
 	return userConfig
 }
 
-func (i *CronInputConfig) SetInputUserConfig(c map[string]interface{})  {
+func (i *CronInputConfig) SetUserConfig(c map[string]interface{}) {
 	logEntry := logrus.WithField("config", i)
-	schedule, ok := c["schedule"].(string)
-	if !ok {
+	if c["schedule"] == nil {
 		logEntry.Error("schedule field not found or incorrect type")
+	} else {
+		schedule := fmt.Sprintf("%v", c["schedule"])
+		i.Schedule = schedule
 	}
-	i.Schedule = schedule
 }
 
-func NewCronInput() *CronInput {
-	cronInput :=  &CronInput{
+func NewCronInput() interface{} {
+	cronInput := &CronInput{
 		nil,
 		nil,
 		nil,
@@ -67,38 +70,42 @@ func NewCronInput() *CronInput {
 	return cronInput
 }
 
-func (input *CronInput) UseConfig(c model.InputConfig) bool{
-	if c.InputName() == "" || c.InputType() != CronInputType {
+func (input *CronInput) SetConfig(c model.Config) bool {
+	if c.GetName() == "" || c.GetType() != CronInputType {
 		return false
 	}
 
-	if userConfig := c.InputUserConfig(); userConfig == nil {
+	if userConfig := c.GetUserConfig(); userConfig == nil {
 		return false
 	}
 
-	input.Config = c
+	input.config = c
 	return true
 }
 
-func (input *CronInput) SetInputChannel(c chan <-model.Input) {
+func (input *CronInput) GetConfig() model.Config {
+	return input.config
+}
+
+func (input *CronInput) SetInputChannel(c chan<- model.Input) {
 	input.channel = c
 }
 
 func (input *CronInput) Listen() {
 	input.cron = cron.New()
-	err := input.cron.AddFunc(input.Config.(*CronInputConfig).Schedule, func() {
+	err := input.cron.AddFunc(input.config.(*CronInputConfig).Schedule, func() {
 		input.channel <- input
 	})
 
 	if err != nil {
-		cronInputLogger.WithField("error", err).Error("Failed to add cron schedule")
+		cronInputLogger.WithField("error", err).Error("Failed to add cron Schedule")
 		// TODO: Add error handling like sending error messages over channel
 	}
 
 	input.cron.Start()
 	select {
-		case <- input.stop:
-			input.cron.Stop()
+	case <-input.stop:
+		input.cron.Stop()
 	}
 
 	close(input.channel)

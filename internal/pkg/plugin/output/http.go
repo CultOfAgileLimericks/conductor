@@ -1,6 +1,7 @@
 package output
 
 import (
+	"fmt"
 	"github.com/CultOfAgileLimericks/conductor/internal/pkg/model"
 	"github.com/sirupsen/logrus"
 	"net/http"
@@ -8,34 +9,35 @@ import (
 )
 
 var httpOutputLogger *logrus.Entry
+
 const HTTPOutputType = "http"
 
 type HTTPOutput struct {
-	Config model.OutputConfig
-	channel chan <-[]byte
+	config     model.Config
+	channel    chan<- []byte
 	httpClient *http.Client
 }
 
 type HTTPOutputConfig struct {
-	Name string
+	name   string
 	Method string
-	URL string
-	Body string
+	URL    string
+	Body   string
 }
 
-func (c *HTTPOutputConfig) OutputType() string {
+func (c *HTTPOutputConfig) GetType() string {
 	return HTTPOutputType
 }
 
-func (c *HTTPOutputConfig) OutputName() string {
-	return c.Name
+func (c *HTTPOutputConfig) GetName() string {
+	return c.name
 }
 
-func (c *HTTPOutputConfig) SetOutputName(name string) {
-	c.Name = name
+func (c *HTTPOutputConfig) SetName(name string) {
+	c.name = name
 }
 
-func (c *HTTPOutputConfig) OutputUserConfig() map[string]interface{} {
+func (c *HTTPOutputConfig) GetUserConfig() map[string]interface{} {
 	if c.URL == "" || c.Method == "" {
 		return nil
 	}
@@ -49,29 +51,31 @@ func (c *HTTPOutputConfig) OutputUserConfig() map[string]interface{} {
 	return userConfig
 }
 
-
-func (c *HTTPOutputConfig) SetOutputUserConfig(config map[string]interface{}) {
-	method, ok := config["method"].(string)
+func (c *HTTPOutputConfig) SetUserConfig(config map[string]interface{}) {
 	logEntry := logrus.WithField("config", c)
-	if !ok {
+	if config["method"] == nil {
 		logEntry.Error("method field not found or incorrect type")
+	} else {
+		method := fmt.Sprintf("%v", config["method"])
+		c.Method = method
 	}
-	c.Method = method
 
-	url, ok := config["url"].(string)
-	if !ok {
+	if config["url"] == nil {
 		logEntry.Error("url field not found or incorrect type")
+	} else {
+		url := fmt.Sprintf("%v", config["url"])
+		c.URL = url
 	}
-	c.URL = url
 
-	body, ok := config["body"].(string)
-	if !ok {
+	if config["body"] == nil {
 		logEntry.Error("body field not found or incorrect type")
+	} else {
+		body := fmt.Sprintf("%v", config["body"])
+		c.Body = body
 	}
-	c.Body = body
 }
 
-func NewHTTPOutput() *HTTPOutput {
+func NewHTTPOutput() interface{} {
 	o := &HTTPOutput{
 		nil,
 		make(chan []byte),
@@ -83,21 +87,25 @@ func NewHTTPOutput() *HTTPOutput {
 	return o
 }
 
-func (o *HTTPOutput) UseConfig(c model.OutputConfig) bool {
-	if c.OutputType() != HTTPOutputType || c.OutputName() == "" {
+func (o *HTTPOutput) SetConfig(c model.Config) bool {
+	if c.GetType() != HTTPOutputType || c.GetName() == "" {
 		return false
 	}
 
-	if c := c.OutputUserConfig(); c == nil {
+	if c := c.GetUserConfig(); c == nil {
 		return false
 	}
 
-	o.Config = c
+	o.config = c
 	return true
 }
 
+func (o *HTTPOutput) GetConfig() model.Config {
+	return o.config
+}
+
 func (o *HTTPOutput) Execute() bool {
-	httpOutputConfig := o.Config.(*HTTPOutputConfig)
+	httpOutputConfig := o.config.(*HTTPOutputConfig)
 	request, err := http.NewRequest(httpOutputConfig.Method, httpOutputConfig.URL, strings.NewReader(httpOutputConfig.Body))
 
 	if err != nil {

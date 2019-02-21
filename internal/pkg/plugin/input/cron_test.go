@@ -7,17 +7,17 @@ import (
 )
 
 func TestNewCronInput(t *testing.T) {
-	c := NewCronInput()
-	if c.Config != nil {
+	c := NewCronInput().(*CronInput)
+	if c.GetConfig() != nil {
 		t.Fail()
 	}
 }
 
 func TestCronInputConfig_SetInputName(t *testing.T) {
 	config := &CronInputConfig{}
-	config.SetInputName("test name")
+	config.SetName("test name")
 
-	if config.Name != "test name" {
+	if config.GetName() != "test name" {
 		t.Fail()
 	}
 }
@@ -26,9 +26,9 @@ func TestCronInputConfig_SetInputUserConfig_Correct(t *testing.T) {
 	config := &CronInputConfig{}
 	userConfig := make(map[string]interface{})
 	userConfig["schedule"] = "* * * * * *"
-	config.SetInputUserConfig(userConfig)
+	config.SetUserConfig(userConfig)
 
-	if config.InputUserConfig()["schedule"] != userConfig["schedule"] {
+	if config.GetUserConfig()["schedule"] != userConfig["schedule"] {
 		t.Fail()
 	}
 
@@ -40,49 +40,49 @@ func TestCronInputConfig_SetInputUserConfig_Correct(t *testing.T) {
 func TestCronInputConfig_SetInputUserConfig_Incorrect(t *testing.T) {
 	config := &CronInputConfig{}
 	userConfig := make(map[string]interface{})
-	config.SetInputUserConfig(userConfig)
+	config.SetUserConfig(userConfig)
 
 	if config.Schedule != "" {
 		t.Fail()
 	}
 
-	if config.InputUserConfig()["schedule"] != nil {
+	if config.GetUserConfig()["schedule"] != nil {
 		t.Fail()
 	}
 }
 
 func TestCronInput_UseConfig_Incorrect(t *testing.T) {
-	c := NewCronInput()
+	c := NewCronInput().(*CronInput)
 	config := &CronInputConfig{}
 
-	ok := c.UseConfig(config)
-	if ok || c.Config == config {
+	ok := c.SetConfig(config)
+	if ok || c.config == config {
 		t.Fail()
 	}
 
-	config.Name = "TestCronInput"
+	config.SetName("TestCronInput")
 
-	ok = c.UseConfig(config)
-	if ok || c.Config == config {
+	ok = c.SetConfig(config)
+	if ok || c.GetConfig() == config {
 		t.Fail()
 	}
 }
 
 func TestCronInput_UseConfig_Correct(t *testing.T) {
-	c := NewCronInput()
+	c := NewCronInput().(*CronInput)
 	config := &CronInputConfig{
 		Schedule: "* * * * * *",
-		Name: "TestCronInput",
 	}
+	config.SetName("TestCronInput")
 
-	ok := c.UseConfig(config)
-	if !ok || c.Config != config {
+	ok := c.SetConfig(config)
+	if !ok || c.GetConfig() != config {
 		t.Fail()
 	}
 }
 
 func TestCronInput_SetInputChannel(t *testing.T) {
-	c := NewCronInput()
+	c := NewCronInput().(*CronInput)
 
 	channel := make(chan model.Input)
 	c.SetInputChannel(channel)
@@ -93,13 +93,13 @@ func TestCronInput_SetInputChannel(t *testing.T) {
 }
 
 func TestCronInput_Listen_Correct(t *testing.T) {
-	c := NewCronInput()
+	c := NewCronInput().(*CronInput)
 	config := &CronInputConfig{
 		Schedule: "* * * * * *",
-		Name: "TestCronInput",
+		name:     "TestCronInput",
 	}
 
-	c.UseConfig(config)
+	c.SetConfig(config)
 	channel := make(chan model.Input)
 
 	c.SetInputChannel(channel)
@@ -108,23 +108,23 @@ func TestCronInput_Listen_Correct(t *testing.T) {
 	defer c.Stop()
 
 	select {
-	case i := <- channel:
+	case i := <-channel:
 		if i != c {
 			t.Fail()
 		}
-	case <- time.After(2 * time.Second):
+	case <-time.After(2 * time.Second):
 		t.Fail()
 	}
 }
 
 func TestCronInput_Listen_Incorrect(t *testing.T) {
-	c := NewCronInput()
+	c := NewCronInput().(*CronInput)
 	config := &CronInputConfig{
 		Schedule: "asdfgh",
-		Name: "TestCronInput",
 	}
+	config.SetName("TestCronInput")
 
-	c.UseConfig(config)
+	c.SetConfig(config)
 	channel := make(chan model.Input)
 
 	c.SetInputChannel(channel)
@@ -133,23 +133,23 @@ func TestCronInput_Listen_Incorrect(t *testing.T) {
 	defer c.Stop()
 
 	select {
-	case i := <- channel:
+	case i := <-channel:
 		if i != c {
 			t.Fail()
 		}
-	case <- time.After(2 * time.Second):
+	case <-time.After(2 * time.Second):
 
 	}
 }
 
 func TestCronInput_Listen_Stopped(t *testing.T) {
-	c := NewCronInput()
+	c := NewCronInput().(*CronInput)
 	config := &CronInputConfig{
 		Schedule: "* * * * * *",
-		Name: "TestCronInput",
 	}
+	config.SetName("TestCronInput")
 
-	c.UseConfig(config)
+	c.SetConfig(config)
 	channel := make(chan model.Input)
 
 	c.SetInputChannel(channel)
@@ -159,7 +159,7 @@ func TestCronInput_Listen_Stopped(t *testing.T) {
 
 	for {
 		select {
-		case i, ok := <- channel:
+		case i, ok := <-channel:
 			if seconds == 3 {
 				c.Stop()
 			}
@@ -171,7 +171,7 @@ func TestCronInput_Listen_Stopped(t *testing.T) {
 				return
 			}
 			seconds++
-		case <- time.After(4 * time.Second):
+		case <-time.After(4 * time.Second):
 			t.Fail()
 			return
 		}
@@ -180,11 +180,11 @@ func TestCronInput_Listen_Stopped(t *testing.T) {
 }
 
 func TestCronInput_UseConfig(t *testing.T) {
-	c := NewCronInput()
+	c := NewCronInput().(*CronInput)
 	config := &CronInputConfig{}
 
-	c.UseConfig(config)
-	if c.Config == config {
+	c.SetConfig(config)
+	if c.GetConfig() == config {
 		t.Fail()
 	}
 }

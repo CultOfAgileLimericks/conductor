@@ -1,9 +1,10 @@
 package model
 
 type Input interface {
-	UseConfig(c InputConfig) bool
+	SetConfig(c Config) bool
+	GetConfig() Config
 
-	SetInputChannel(c chan <-Input)
+	SetInputChannel(c chan<- Input)
 	Listen()
 	Stop()
 }

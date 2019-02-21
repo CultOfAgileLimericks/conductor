@@ -1,0 +1,8 @@
+name: "hello world"
+inputs:
+  - type: cron
+    config:
+      name: "cron input"
+      schedule: "* * * * * *"
+outputs:
+  - "this is an invalid output"

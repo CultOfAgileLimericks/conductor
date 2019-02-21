@@ -1,0 +1,8 @@
+name: "hello world"
+outputs:
+  - type: http
+    config:
+      name: "HTTP GET google.com"
+      method: "GET"
+      url: "https://google.com"
+      body: ""
