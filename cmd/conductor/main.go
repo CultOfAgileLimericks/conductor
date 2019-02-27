@@ -10,9 +10,10 @@ import (
 )
 
 func InitPluginManager() {
-	plugin.Manager.RegisterInput("cron", input.NewCronInput, reflect.TypeOf(input.CronInputConfig{}))
-	plugin.Manager.RegisterInput("http", input.NewHTTPInput, reflect.TypeOf(input.HTTPInputConfig{}))
-	plugin.Manager.RegisterOutput("http", output.NewHTTPOutput, reflect.TypeOf(output.HTTPOutputConfig{}))
+	plugin.Manager.RegisterInput(input.CronInputType, input.NewCronInput, reflect.TypeOf(input.CronInputConfig{}))
+	plugin.Manager.RegisterInput(input.HTTPInputType, input.NewHTTPInput, reflect.TypeOf(input.HTTPInputConfig{}))
+	plugin.Manager.RegisterInput(input.AMQPInputType, input.NewAMQPInput, reflect.TypeOf(input.AMQPInputConfig{}))
+	plugin.Manager.RegisterOutput(output.HTTPOutputType, output.NewHTTPOutput, reflect.TypeOf(output.HTTPOutputConfig{}))
 }
 
 func main() {
